@@ -1,8 +1,8 @@
-import badmintonImg from '../../../assets/images/badminton.svg';
-import footballImg from '../../../assets/images/football.svg';
-import pickleballImg from '../../../assets/images/pickleball.svg';
-import tennisImg from '../../../assets/images/tennis.svg';
-import locatedImg from '../../../assets/images/locate.svg';
+import badmintonImg from '../../../assets/svgs/badminton.svg';
+import footballImg from '../../../assets/svgs/football.svg';
+import pickleballImg from '../../../assets/svgs/pickleball.svg';
+import tennisImg from '../../../assets/svgs/tennis.svg';
+import locatedImg from '../../../assets/svgs/locate.svg';
 
 const SPORT_GRADIENTS = {
   badminton: 'from-blue-900 via-blue-700 to-cyan-600',

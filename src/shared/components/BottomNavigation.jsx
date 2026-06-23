@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import courtsImg from '../../assets/images/court.svg';
-import matchesImg from '../../assets/images/match.svg';
-import bookingImg from '../../assets/images/booking.svg';
-import profileImg from '../../assets/images/profile.svg';
+import courtsImg from '../../assets/svgs/court.svg';
+import matchesImg from '../../assets/svgs/match.svg';
+import bookingImg from '../../assets/svgs/booking.svg';
+import profileImg from '../../assets/svgs/profile.svg';
 
 const NAV_ITEMS = [
   { id: 'courts', label: 'Courts', image: courtsImg, path: '/' },

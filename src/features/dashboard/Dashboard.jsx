@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Moon, Sun, LogIn } from 'lucide-react';
-import gpsImg from '../../assets/images/gps.svg';
-import arrowDownImg from '../../assets/images/arrow_down.svg';
-import notificationImg from '../../assets/images/notification.svg';
-import searchImg from '../../assets/images/search.svg';
+import gpsImg from '../../assets/svgs/gps.svg';
+import arrowDownImg from '../../assets/svgs/arrow_down.svg';
+import notificationImg from '../../assets/svgs/notification.svg';
+import searchImg from '../../assets/svgs/search.svg';
 import CourtCard from './components/CourtCard';
 import MatchCard from './components/MatchCard';
-import badmintonImg from '../../assets/images/badminton.svg';
-import footballImg from '../../assets/images/football.svg';
-import pickleballImg from '../../assets/images/pickleball.svg';
-import tennisImg from '../../assets/images/tennis.svg';
+import badmintonImg from '../../assets/svgs/badminton.svg';
+import footballImg from '../../assets/svgs/football.svg';
+import pickleballImg from '../../assets/svgs/pickleball.svg';
+import tennisImg from '../../assets/svgs/tennis.svg';
 import protonImg from '../../assets/images/ProtonBadmintonCenter.png';
 import eliteImg from '../../assets/images/EliteFootballArena.png';
 // import { courtService, matchService } from '../../shared/services/api'; // TODO: bỏ comment khi API sẵn sàng
@@ -92,7 +92,8 @@ function Dashboard() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedSport, setSelectedSport] = useState(null);
   const [currentLocation] = useState('Hồ Chí Minh');
-  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
+  // Mặc định dark mode, chỉ chuyển sang light nếu user đã chọn 'light' trước đó
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
 
   useEffect(() => {
     if (isDark) {
@@ -116,8 +117,7 @@ function Dashboard() {
   };
 
   const handleBookCourt = (courtId) => {
-    // TODO: navigate(`/courts/${courtId}/book`) — chuyển tới trang đặt sân
-    console.log('Book court:', courtId);
+    navigate(`/courts/${courtId}`);
   };
 
   const handleJoinMatch = (matchId) => {

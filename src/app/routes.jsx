@@ -4,6 +4,7 @@ import Dashboard from '../features/dashboard/Dashboard.jsx';
 import Matches from '../features/matches/Matches.jsx';
 import Bookings from '../features/bookings/Bookings.jsx';
 import Profile from '../features/profile/Profile.jsx';
+import CourtDetailPage from '../features/courts/pages/CourtDetailPage.jsx';
 import BottomNavigation from '../shared/components/BottomNavigation.jsx';
 
 function MainLayout({ children }) {
@@ -25,6 +26,8 @@ function AppRoutes() {
                 <Route path="/matches" element={<MainLayout><Matches /></MainLayout>} />
                 <Route path="/bookings" element={<MainLayout><Bookings /></MainLayout>} />
                 <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
+                {/* Trang chi tiết sân — không có BottomNavigation */}
+                <Route path="/courts/:id" element={<CourtDetailPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
