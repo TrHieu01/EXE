@@ -1,87 +1,123 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Moon, Sun, LogIn } from 'lucide-react';
+import { Moon, Sun, LogIn } from 'lucide-react';
 import gpsImg from '../../assets/svgs/gps.svg';
 import arrowDownImg from '../../assets/svgs/arrow_down.svg';
 import notificationImg from '../../assets/svgs/notification.svg';
 import searchImg from '../../assets/svgs/search.svg';
-import CourtCard from './components/CourtCard';
-import MatchCard from './components/MatchCard';
 import badmintonImg from '../../assets/svgs/badminton.svg';
 import footballImg from '../../assets/svgs/football.svg';
 import pickleballImg from '../../assets/svgs/pickleball.svg';
 import tennisImg from '../../assets/svgs/tennis.svg';
 import protonImg from '../../assets/images/ProtonBadmintonCenter.png';
 import eliteImg from '../../assets/images/EliteFootballArena.png';
-// import { courtService, matchService } from '../../shared/services/api'; // TODO: bỏ comment khi API sẵn sàng
+import PostCard from './components/PostCard';
+import { useChat } from '../../shared/context/ChatContext';
 
-/* ─── Dữ liệu mẫu (thay bằng API thực tế) ─── */
-
-const MOCK_FLASH_DEALS = [
-  {
-    id: 1,
-    tag: 'HAPPY HOUR',
-    tagStyle: 'bg-[#CDFF00] text-gray-900',
-    headline: '40% OFF Weekday Mornings',
-    bgClass: 'bg-[#0D1117]',
-    watermark: 'HAPPY HOUR',
-  },
-  {
-    id: 2,
-    tag: 'LIMITED TIME',
-    tagStyle: 'bg-green-600 text-white',
-    headline: 'Book First Go Free',
-    bgClass: 'bg-[#0A2010]',
-    watermark: 'LIMITED TIME',
-  },
-];
+/* ─── Danh mục môn thể thao ─── */
 
 const MOCK_SPORTS = [
-  { id: 1, name: 'Badminton', image: badmintonImg },
-  { id: 2, name: 'Football', image: footballImg },
-  { id: 3, name: 'Pickleball', image: pickleballImg },
-  { id: 4, name: 'Tennis', image: tennisImg },
+  { id: 1, name: 'Badminton', image: badmintonImg, key: 'badminton' },
+  { id: 2, name: 'Football', image: footballImg, key: 'football' },
+  { id: 3, name: 'Pickleball', image: pickleballImg, key: 'pickleball' },
+  { id: 4, name: 'Tennis', image: tennisImg, key: 'tennis' },
 ];
 
-const MOCK_COURTS = [
+/* ─── Dữ liệu mẫu - Top Teams ─── */
+
+const MOCK_TOP_TEAMS = [
   {
     id: 1,
-    name: 'Proton Badminton Center',
-    rating: 4.8,
-    distance: '1.2 km',
-    district: 'Quận 7',
-    price: '120k/h',
-    sport: 'badminton',
-    image: protonImg,
-  },
-  {
-    id: 2,
-    name: 'Elite Football Arena',
-    rating: 4.6,
-    distance: '2.8 km',
-    district: 'Quận 2',
-    price: '450k/h',
+    name: 'FC Tiến Phát',
     sport: 'football',
-    image: eliteImg,
-  },
-];
-
-const MOCK_MATCHES = [
-  {
-    id: 1,
-    userName: 'Minh Tran',
-    level: 'INTERMEDIATE',
-    sport: 'Badminton',
-    time: 'Today, 19:00',
-    avatarBadge: 'B',
+    rating: '4.9',
+    members: 15,
+    avatarBadge: 'TP',
+    bgGradient: 'from-green-600 to-green-800',
   },
   {
     id: 2,
-    userName: 'Lan Nguyen',
+    name: 'Pro Badminton Team',
+    sport: 'badminton',
+    rating: '4.8',
+    members: 8,
+    avatarBadge: 'PB',
+    bgGradient: 'from-blue-600 to-blue-800',
+  },
+  {
+    id: 3,
+    name: 'Saigon Pickleball',
+    sport: 'pickleball',
+    rating: '4.7',
+    members: 12,
+    avatarBadge: 'SP',
+    bgGradient: 'from-teal-600 to-teal-800',
+  },
+  {
+    id: 4,
+    name: 'Elite Tennis',
+    sport: 'tennis',
+    rating: '4.8',
+    members: 6,
+    avatarBadge: 'ET',
+    bgGradient: 'from-orange-500 to-red-600',
+  },
+];
+
+/* ─── Dữ liệu mẫu - Bài đăng (Posts) ─── */
+
+const MOCK_POSTS = [
+  {
+    id: 1,
+    author: 'Minh Tran',
+    isTeam: false,
+    avatarBadge: 'M',
+    sport: 'badminton',
+    sportLabel: 'Badminton',
+    level: 'INTERMEDIATE',
+    time: '2 hours ago',
+    location: 'Proton Badminton Center, Quận 7',
+    description: 'Mình cần tìm 2 bạn đánh đôi tối nay lúc 19:00. Trình độ trung bình khá, nam nữ đều được, share tiền sân, ai rảnh ib mình nha!',
+    images: [protonImg],
+  },
+  {
+    id: 2,
+    author: 'FC Tiến Phát',
+    isTeam: true,
+    avatarBadge: 'TP',
+    sport: 'football',
+    sportLabel: 'Football',
+    level: 'ADVANCED',
+    time: '5 hours ago',
+    location: 'Elite Football Arena, Quận 2',
+    description: 'Team mình đang thiếu 1 thủ môn cứng cho trận đấu giao hữu 7v7 tối mai lúc 20:00. Đối thủ đá hay, fairplay. Anh em nào muốn thử sức thì liên hệ, tiền nước nôi team bao.',
+    images: [eliteImg],
+  },
+  {
+    id: 3,
+    author: 'Lan Nguyen',
+    isTeam: false,
+    avatarBadge: 'L',
+    sport: 'pickleball',
+    sportLabel: 'Pickleball',
+    level: 'BEGINNER',
+    time: '1 day ago',
+    location: 'Riverside Pickle Court, Quận 1',
+    description: 'Có nhóm bạn nào mới tập chơi pickleball cho mình tham gia với. Mình mới sắm vợt, biết luật cơ bản nhưng chưa có team để giao lưu.',
+    images: [],
+  },
+  {
+    id: 4,
+    author: 'Huy Pham',
+    isTeam: false,
+    avatarBadge: 'H',
+    sport: 'tennis',
+    sportLabel: 'Tennis',
     level: 'PRO',
-    sport: 'Pickleball',
-    time: 'Tomorrow, 07:00',
-    avatarBadge: 'P',
+    time: '2 days ago',
+    location: 'VinCity Tennis Club, Quận 9',
+    description: 'Sáng cuối tuần (7:00 AM) ai rảnh giao lưu không? Kèo giao lưu vui vẻ nâng cao sức khỏe, đánh đơn hoặc đôi đều ok. Ai rảnh thì cmt sđt mình add zalo nhé.',
+    images: [],
   },
 ];
 
@@ -89,10 +125,10 @@ const MOCK_MATCHES = [
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { startChat } = useChat(); // Dùng context để mở chat
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedSport, setSelectedSport] = useState(null);
   const [currentLocation] = useState('Hồ Chí Minh');
-  // Mặc định dark mode, chỉ chuyển sang light nếu user đã chọn 'light' trước đó
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
 
   useEffect(() => {
@@ -105,33 +141,41 @@ function Dashboard() {
     }
   }, [isDark]);
 
-  const handleSearch = (keyword) => {
-    setSearchKeyword(keyword);
-    // TODO: courtService.getAll({ search: keyword, sport: selectedSport }) — tìm kiếm sân theo từ khóa
-  };
-
   const handleFilterSport = (sportId) => {
     const next = sportId === selectedSport ? null : sportId;
     setSelectedSport(next);
-    // TODO: courtService.getAll({ sport: next }) — lọc sân theo môn thể thao
   };
 
-  const handleBookCourt = (courtId) => {
-    navigate(`/courts/${courtId}`);
-  };
+  /* Lọc dữ liệu theo môn thể thao */
+  const selectedSportKey = selectedSport
+    ? MOCK_SPORTS.find((s) => s.id === selectedSport)?.key
+    : null;
 
-  const handleJoinMatch = (matchId) => {
-    // TODO: matchService.join(matchId).then(...) — tham gia trận đấu
-    console.log('Join match:', matchId);
-  };
+  const filteredTeams = selectedSportKey
+    ? MOCK_TOP_TEAMS.filter((t) => t.sport === selectedSportKey)
+    : MOCK_TOP_TEAMS;
 
-  const handleCreateMatch = () => {
-    // TODO: navigate('/matches/create') — chuyển tới trang tạo trận mới
-    console.log('Create match');
+  const filteredPosts = selectedSportKey
+    ? MOCK_POSTS.filter((p) => p.sport === selectedSportKey)
+    : MOCK_POSTS;
+
+  const handleChat = (postId, authorName) => {
+    // Tạo mock user từ tác giả bài viết để nhảy thẳng vào chat
+    const chatUser = {
+      id: `post-${postId}`,
+      name: authorName,
+      avatar: authorName.charAt(0).toUpperCase(),
+      lastMessage: 'Chào bạn, mình quan tâm đến bài đăng này!',
+      time: 'Vừa xong',
+      unread: 0,
+      online: true,
+    };
+    startChat(chatUser);
+    console.log(`Bắt đầu chat với: ${authorName} từ bài viết ${postId}`);
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
 
       {/* ── Thanh tiêu đề ── */}
       <header className="sticky top-0 bg-white dark:bg-gray-900 z-40 px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800 shadow-sm">
@@ -185,40 +229,14 @@ function Dashboard() {
           <input
             type="text"
             value={searchKeyword}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search sports, courts or areas..."
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            placeholder="Search teams, posts, or sports..."
             className="flex-1 bg-transparent text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 outline-none"
           />
         </div>
       </header>
 
       <div className="px-4 pt-5 space-y-7">
-
-        {/* ── Ưu đãi nhanh ── */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-gray-900 dark:text-white font-bold text-lg">Flash Deals</h2>
-            <button className="text-blue-600 dark:text-blue-400 text-sm font-medium">See All</button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-            {MOCK_FLASH_DEALS.map((deal) => (
-              <div
-                key={deal.id}
-                className={`shrink-0 w-72 h-40 ${deal.bgClass} rounded-2xl p-4 flex flex-col justify-end relative overflow-hidden cursor-pointer`}
-              >
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-                  <span className="text-white/[0.07] text-6xl font-black tracking-widest whitespace-nowrap">
-                    {deal.watermark}
-                  </span>
-                </div>
-                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full w-fit mb-2 ${deal.tagStyle}`}>
-                  {deal.tag}
-                </span>
-                <p className="text-white font-bold text-sm leading-snug">{deal.headline}</p>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* ── Danh mục môn thể thao ── */}
         <section>
@@ -232,7 +250,7 @@ function Dashboard() {
                 <div
                   className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${selectedSport === sport.id
                     ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
-                    : 'bg-gray-100 dark:bg-gray-800'
+                    : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm'
                   }`}
                 >
                   <img src={sport.image} alt={sport.name} className="w-8 h-8 object-contain" />
@@ -248,19 +266,66 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* ── Sân gần đây ── */}
+        {/* ── Top Teams ── */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-gray-900 dark:text-white font-bold text-lg">Nearby Courts</h2>
-            <button className="text-blue-600 dark:text-blue-400 text-sm font-medium">View Map</button>
+            <h2 className="text-gray-900 dark:text-white font-bold text-lg">Top Teams</h2>
+            <button className="text-blue-600 dark:text-blue-400 text-sm font-medium">See All</button>
           </div>
-          <div className="flex flex-col gap-3">
-            {MOCK_COURTS.map((court) => (
-              <CourtCard key={court.id} court={court} onBook={handleBookCourt} />
-            ))}
-          </div>
+          {filteredTeams.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide">
+              {filteredTeams.map((team) => (
+                <div
+                  key={team.id}
+                  className={`shrink-0 w-40 h-48 bg-gradient-to-br ${team.bgGradient} rounded-2xl p-4 flex flex-col justify-between relative shadow-md shadow-gray-200 dark:shadow-none`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                      <span className="text-white font-bold text-sm select-none">{team.avatarBadge}</span>
+                    </div>
+                    <div className="bg-black/30 backdrop-blur-md rounded-full px-1.5 py-0.5 flex items-center gap-1">
+                      <span className="text-yellow-400 text-[10px] leading-none">⭐</span>
+                      <span className="text-white text-[10px] font-semibold leading-none">{team.rating}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-sm leading-tight mb-1">{team.name}</h3>
+                    <p className="text-white/80 text-xs flex items-center gap-1">
+                       👥 {team.members} members
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+             <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+               No top teams found for this sport.
+             </div>
+          )}
         </section>
 
+        {/* ── Posts / Bảng tin ── */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-gray-900 dark:text-white font-bold text-lg">Recent Posts</h2>
+            <button className="text-blue-600 dark:text-blue-400 text-sm font-medium">New Post</button>
+          </div>
+          {filteredPosts.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {filteredPosts.map((post) => (
+                <PostCard key={post.id} post={post} onChat={handleChat} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+              <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-4">
+                <span className="text-2xl">📝</span>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">No posts for this sport yet.</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Be the first to post!</p>
+            </div>
+          )}
+        </section>
 
       </div>
 
@@ -269,3 +334,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+

@@ -4,13 +4,22 @@ const ChatContext = createContext();
 
 export function ChatProvider({ children }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [activeChatUser, setActiveChatUser] = useState(null);
 
   const toggleChat = () => setIsChatOpen((prev) => !prev);
   const openChat = () => setIsChatOpen(true);
   const closeChat = () => setIsChatOpen(false);
 
+  const startChat = (user) => {
+    setActiveChatUser(user);
+    setIsChatOpen(true);
+  };
+
   return (
-    <ChatContext.Provider value={{ isChatOpen, toggleChat, openChat, closeChat }}>
+    <ChatContext.Provider value={{ 
+      isChatOpen, toggleChat, openChat, closeChat,
+      activeChatUser, setActiveChatUser, startChat 
+    }}>
       {children}
     </ChatContext.Provider>
   );
