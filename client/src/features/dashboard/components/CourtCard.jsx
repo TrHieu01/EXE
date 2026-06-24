@@ -1,7 +1,7 @@
-import badmintonImg from '../../../assets/svgs/badminton.svg';
-import footballImg from '../../../assets/svgs/football.svg';
-import pickleballImg from '../../../assets/svgs/pickleball.svg';
-import tennisImg from '../../../assets/svgs/tennis.svg';
+import badmintonImg from '../../../assets/icons/badminton.png';
+import footballImg from '../../../assets/icons/football.png';
+import pickleballImg from '../../../assets/icons/pickelball.png';
+import tennisImg from '../../../assets/icons/tennis.png';
 import locatedImg from '../../../assets/svgs/locate.svg';
 
 const SPORT_GRADIENTS = {
