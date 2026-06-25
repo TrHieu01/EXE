@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import { validateEmail } from '../../../shared/utils/validators';
+import { authService } from '../../../shared/services/api';
 
 const SOCIAL_BUTTONS = [
   {
@@ -58,7 +59,13 @@ function LoginForm() {
     setErrors({});
     setIsLoading(true);
     try {
-      // await authService.login(form); // TODO: gọi API đăng nhập
+      const res = await authService.login(form.email, form.password);
+      localStorage.setItem('token', res.access_token);
+      
+      // Tải profile của user vừa đăng nhập và lưu cache
+      const profile = await authService.getProfile();
+      localStorage.setItem('user', JSON.stringify(profile));
+      
       navigate('/');
     } catch (err) {
       setErrors({ general: err.message || 'Đăng nhập thất bại, vui lòng thử lại' });

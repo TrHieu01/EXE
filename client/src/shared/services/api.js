@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -21,13 +21,28 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message = error.response?.data?.message || 'Đã có lỗi xảy ra';
+    let message = 'Đã có lỗi xảy ra';
+    if (error.response) {
+      const data = error.response.data;
+      if (typeof data?.detail === 'string') {
+        message = data.detail;
+      } else if (data?.message) {
+        message = data.message;
+      } else if (Array.isArray(data?.detail)) {
+        message = data.detail.map(d => d.msg).join(', ');
+      }
+    } else if (error.request) {
+      message = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend và kết nối mạng.';
+    } else {
+      message = error.message;
+    }
     return Promise.reject(new Error(message));
   }
 );
 
 export const authService = {
-  login: (phone) => apiClient.post('/auth/login', { phone }),
+  login: (email, password) => apiClient.post('/auth/login', { email, password }),
+  register: (data) => apiClient.post('/auth/register', data),
   logout: () => apiClient.post('/auth/logout'),
   getProfile: () => apiClient.get('/auth/me'),
 };

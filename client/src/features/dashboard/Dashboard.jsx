@@ -13,6 +13,7 @@ import protonImg from '../../assets/images/ProtonBadmintonCenter.png';
 import eliteImg from '../../assets/images/EliteFootballArena.png';
 import PostCard from './components/PostCard';
 import { useChat } from '../../shared/context/ChatContext';
+import { authService, matchService } from '../../shared/services/api';
 
 /* ─── Danh mục môn thể thao ─── */
 
@@ -64,63 +65,6 @@ const MOCK_TOP_TEAMS = [
   },
 ];
 
-/* ─── Dữ liệu mẫu - Bài đăng (Posts) ─── */
-
-const MOCK_POSTS = [
-  {
-    id: 1,
-    author: 'Minh Tran',
-    isTeam: false,
-    avatarBadge: 'M',
-    sport: 'badminton',
-    sportLabel: 'Badminton',
-    level: 'INTERMEDIATE',
-    time: '2 hours ago',
-    location: 'Proton Badminton Center, Quận 7',
-    description: 'Mình cần tìm 2 bạn đánh đôi tối nay lúc 19:00. Trình độ trung bình khá, nam nữ đều được, share tiền sân, ai rảnh ib mình nha!',
-    images: [protonImg],
-  },
-  {
-    id: 2,
-    author: 'FC Tiến Phát',
-    isTeam: true,
-    avatarBadge: 'TP',
-    sport: 'football',
-    sportLabel: 'Football',
-    level: 'ADVANCED',
-    time: '5 hours ago',
-    location: 'Elite Football Arena, Quận 2',
-    description: 'Team mình đang thiếu 1 thủ môn cứng cho trận đấu giao hữu 7v7 tối mai lúc 20:00. Đối thủ đá hay, fairplay. Anh em nào muốn thử sức thì liên hệ, tiền nước nôi team bao.',
-    images: [eliteImg],
-  },
-  {
-    id: 3,
-    author: 'Lan Nguyen',
-    isTeam: false,
-    avatarBadge: 'L',
-    sport: 'pickleball',
-    sportLabel: 'Pickleball',
-    level: 'BEGINNER',
-    time: '1 day ago',
-    location: 'Riverside Pickle Court, Quận 1',
-    description: 'Có nhóm bạn nào mới tập chơi pickleball cho mình tham gia với. Mình mới sắm vợt, biết luật cơ bản nhưng chưa có team để giao lưu.',
-    images: [],
-  },
-  {
-    id: 4,
-    author: 'Huy Pham',
-    isTeam: false,
-    avatarBadge: 'H',
-    sport: 'tennis',
-    sportLabel: 'Tennis',
-    level: 'PRO',
-    time: '2 days ago',
-    location: 'VinCity Tennis Club, Quận 9',
-    description: 'Sáng cuối tuần (7:00 AM) ai rảnh giao lưu không? Kèo giao lưu vui vẻ nâng cao sức khỏe, đánh đơn hoặc đôi đều ok. Ai rảnh thì cmt sđt mình add zalo nhé.',
-    images: [],
-  },
-];
-
 /* ─── Component chính ─── */
 
 function Dashboard() {
@@ -131,6 +75,12 @@ function Dashboard() {
   const [currentLocation] = useState('Hồ Chí Minh');
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [user, setUser] = useState(() => {
+    const cached = localStorage.getItem('user');
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [posts, setPosts] = useState([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
 
   useEffect(() => {
     if (isDark) {
@@ -142,9 +92,69 @@ function Dashboard() {
     }
   }, [isDark]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const profile = await authService.getProfile();
+        setUser(profile);
+        localStorage.setItem('user', JSON.stringify(profile));
+      } catch (err) {
+        console.error("Lỗi lấy thông tin cá nhân:", err);
+      }
+    };
+    if (localStorage.getItem('token')) {
+      fetchUser();
+    }
+  }, []);
+
+  const fetchPosts = async () => {
+    setIsLoadingPosts(true);
+    try {
+      const data = await matchService.getAll();
+      const mapped = data.map(m => {
+        const authorName = m.host.profile?.full_name || m.host.email;
+        const sportKey = m.sport.name === 'Cầu lông' ? 'badminton' : (m.sport.name === 'Pickleball' ? 'pickleball' : (m.sport.name === 'Bóng đá' ? 'football' : 'tennis'));
+        return {
+          id: m.id,
+          author: authorName,
+          isTeam: false,
+          avatarBadge: authorName.charAt(0).toUpperCase(),
+          sport: sportKey,
+          sportLabel: m.sport.name,
+          level: m.required_level.toUpperCase(),
+          time: new Date(m.start_time).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
+          location: m.court ? `${m.court.venue.name} - ${m.court.name}` : 'Chưa chọn sân',
+          description: m.description || m.title,
+          images: m.court && m.court.venue.name.includes('Hoàng Long') ? [protonImg] : (m.court && m.court.venue.name.includes('Phú Mỹ Hưng') ? [eliteImg] : []),
+        };
+      });
+      setPosts(mapped);
+    } catch (err) {
+      console.error("Lỗi tải bài đăng:", err);
+    } finally {
+      setIsLoadingPosts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
   const handleFilterSport = (sportId) => {
     const next = sportId === selectedSport ? null : sportId;
     setSelectedSport(next);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (err) {
+      console.error(err);
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/login');
   };
 
   /* Lọc dữ liệu theo môn thể thao */
@@ -157,11 +167,10 @@ function Dashboard() {
     : MOCK_TOP_TEAMS;
 
   const filteredPosts = selectedSportKey
-    ? MOCK_POSTS.filter((p) => p.sport === selectedSportKey)
-    : MOCK_POSTS;
+    ? posts.filter((p) => p.sport === selectedSportKey)
+    : posts;
 
   const handleChat = (postId, authorName) => {
-    // Tạo mock user từ tác giả bài viết để nhảy thẳng vào chat
     const chatUser = {
       id: `post-${postId}`,
       name: authorName,
@@ -212,71 +221,86 @@ function Dashboard() {
             <button className="relative overflow-hidden group bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-[0_0_15px_rgba(234,179,8,0.4)] hover:scale-105 transition-transform">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Premium</span>
-              {/* Hiệu ứng ánh gương lấp lánh */}
               <div className="absolute inset-0 w-[200%] -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-shimmer pointer-events-none"></div>
             </button>
 
-            {/* Nút đăng nhập */}
-            <button
-              onClick={() => navigate('/login')}
-              className="hidden md:flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 px-2.5 py-1.5 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Đăng nhập</span>
-            </button>
-
-            {/* Avatar người dùng có Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-blue-500 transition-all"
+            {/* Nút đăng nhập hoặc avatar */}
+            {!user ? (
+              <button
+                onClick={() => navigate('/login')}
+                className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 px-2.5 py-1.5 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
               >
-                <span className="text-white text-xs font-bold select-none">U</span>
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Đăng nhập</span>
               </button>
+            ) : (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-blue-500 transition-all"
+                >
+                  <span className="text-white text-xs font-bold select-none">
+                    {(user.profile?.full_name || user.email).charAt(0).toUpperCase()}
+                  </span>
+                </button>
 
-              {/* Profile Dropdown */}
-              {isProfileOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)}></div>
-                  <div className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 p-4 animate-in fade-in zoom-in duration-200">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0 text-white text-lg font-bold">U</div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 dark:text-white leading-tight">Nguyễn Văn A</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">van.a@example.com</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h5 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Sport Levels</h5>
-                      
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
-                          <img src={badmintonImg} alt="Badminton" className="w-5 h-5 rounded-md object-cover" />
-                          Badminton
-                        </span>
-                        <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md text-xs">Intermediate</span>
+                {/* Profile Dropdown */}
+                {isProfileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)}></div>
+                    <div className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 p-4 animate-in fade-in zoom-in duration-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0 text-white text-lg font-bold">
+                          {(user.profile?.full_name || user.email).charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 dark:text-white leading-tight">
+                            {user.profile?.full_name || 'Người dùng'}
+                          </h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[140px]">{user.email}</p>
+                        </div>
                       </div>
                       
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
-                          <img src={tennisImg} alt="Tennis" className="w-5 h-5 rounded-md object-cover" />
-                          Tennis
-                        </span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md text-xs">Advanced</span>
+                      <div className="space-y-3">
+                        <h5 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Sport Levels</h5>
+                        
+                        {user.sports && user.sports.length > 0 ? (
+                          user.sports.map(us => (
+                            <div key={us.id} className="flex items-center justify-between text-sm">
+                              <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                                {us.sport.icon_url ? (
+                                  <img src={us.sport.icon_url} alt={us.sport.name} className="w-5 h-5 rounded-md object-contain" />
+                                ) : (
+                                  <span className="text-sm">🏸</span>
+                                )}
+                                {us.sport.name}
+                              </span>
+                              <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md text-xs">
+                                {us.skill_level}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                            Chưa cập nhật trình độ thể thao
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <button 
+                          onClick={handleLogout}
+                          className="w-full flex items-center justify-center gap-2 text-sm text-red-600 dark:text-red-500 font-bold py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Log out
+                        </button>
                       </div>
                     </div>
-                    
-                    <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-                      <button className="w-full flex items-center justify-center gap-2 text-sm text-red-600 dark:text-red-500 font-bold py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                        <LogOut className="w-4 h-4" />
-                        Log out
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
