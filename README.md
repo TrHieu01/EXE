@@ -1,16 +1,60 @@
-# React + Vite
+# EXE101 - Badminton Social Network & Booking System 🏸
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Một nền tảng mạng xã hội và đặt sân cầu lông chuyên nghiệp, giúp người chơi dễ dàng tìm kiếm sân, đặt lịch và kết nối với các đối thủ/đồng đội khác.
 
-Currently, two official plugins are available:
+## 🚀 Tính năng nổi bật
+- **Quản lý tài khoản (Authentication):** Đăng ký, đăng nhập an toàn với JWT.
+- **Hệ thống sân bãi (Courts):** Xem thông tin sân cầu lông, tích hợp bản đồ số (Leaflet) để tìm kiếm vị trí trực quan.
+- **Tìm kiếm đối thủ/trận đấu (Matches):** Mạng xã hội thu nhỏ giúp người chơi tạo và tìm kiếm các trận đấu, ghép nhóm dễ dàng.
+- **Đặt lịch sân (Bookings):** Đặt sân theo thời gian thực, quản lý lịch đặt sân hiệu quả.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 💻 Công nghệ sử dụng
 
-## React Compiler
+### Frontend (Client)
+- **Framework:** React 19, Vite
+- **Styling:** Tailwind CSS 4
+- **Routing:** React Router v7
+- **Bản đồ:** Leaflet / React Leaflet
+- **HTTP Client:** Axios
+- **Icon:** Lucide React
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Backend (Server)
+- **Framework:** FastAPI (Python)
+- **Database:** PostgreSQL
+- **ORM:** SQLAlchemy
+- **Data Validation:** Pydantic
+- **Authentication:** JWT (python-jose), Passlib (bcrypt)
+- **Server:** Uvicorn
 
-## Expanding the ESLint configuration
+## 🛠️ Yêu cầu hệ thống
+- [Node.js](https://nodejs.org/) (phiên bản 18+ trở lên)
+- [Python](https://www.python.org/) (phiên bản 3.9+ trở lên)
+- [PostgreSQL](https://www.postgresql.org/)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ⚙️ Hướng dẫn cài đặt & Chạy ứng dụng
+
+### 1. Cài đặt và chạy Backend (Server)
+Mở terminal và di chuyển vào thư mục `server`:
+```bash
+cd server
+
+# Cài đặt thư viện (nếu sử dụng uv hoặc pip)
+pip install -r requirements.txt
+
+# Chạy server FastAPI
+uv run uvicorn app.main:app --reload
+```
+API Docs (Swagger UI) sẽ có sẵn tại: `http://localhost:8000/docs`
+
+### 2. Cài đặt và chạy Frontend (Client)
+Mở một terminal khác và di chuyển vào thư mục `client`:
+```bash
+cd client
+
+# Cài đặt dependencies
+npm install
+
+# Khởi chạy ứng dụng
+npm run dev
+```
+Giao diện frontend sẽ chạy tại: `http://localhost:5173`
